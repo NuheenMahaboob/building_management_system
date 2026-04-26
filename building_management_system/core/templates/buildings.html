@@ -1,0 +1,70 @@
+<h1>Building Management System</h1>
+
+<style>
+    body {
+        font-family: Arial;
+        margin: 0;
+    }
+
+    .navbar {
+        display: flex;
+        justify-content: flex-start;
+        gap: 10px;
+        padding: 10px;
+        background-color: #333;
+    }
+
+    .btn {
+        padding: 10px 15px;
+        background-color: #4CAF50;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 14px;
+    }
+
+    .btn:hover {
+        background-color: #45a049;
+    }
+
+    h1 {
+        margin: 20px;
+    }
+</style>
+
+<div class="navbar">
+    <a class="btn" href="{% url 'persons' %}">Persons</a>
+    <a class="btn" href="{% url 'residents' %}">Residents</a>
+    <a class="btn" href="{% url 'managers' %}">Managers</a>
+    <a class="btn" href="{% url 'buildings' %}">Buildings</a>
+    <a class="btn" href="{% url 'apartments' %}">Apartments</a>
+    <a class="btn" href="{% url 'billings' %}">Billings</a>
+    <a class="btn" href="{% url 'complaints' %}">Complaints</a>
+    <a class="btn" href="{% url 'pending_complaints' %}">Pending Complaints</a>
+    <a class="btn" href="{% url 'solved_complaints' %}">Solved Complaints</a>
+    <a class="btn" href="{% url 'notices' %}">Notices</a>
+    <a class="btn" href="{% url 'pending_bill' %}">PendingBill</a>
+    <a class="btn" href="{% url 'paid_bill' %}">PaidBill</a>
+    <a class="btn" href="{% url 'reports' %}">Report</a>
+</div>
+<h2>Building Table</h2>
+
+<table border="1">
+<tr>
+<th>building_id</th>
+<th>name</th>
+<th>address</th>
+<th>total_apartment</th>
+<th>manager_id</th>
+</tr>
+
+{% for b in buildings %}
+<tr>
+<td>{{ b.building_id }}</td>
+<td>{{ b.name }}</td>
+<td>{{ b.address }}</td>
+<td>{{ b.total_apartment }}</td>
+<td>{{ b.manager.person_id }}</td>
+</tr>
+{% endfor %}
+</table>

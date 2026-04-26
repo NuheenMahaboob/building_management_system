@@ -1,0 +1,103 @@
+<h1>Building Management System</h1>
+
+<style>
+    body {
+        font-family: Arial;
+        margin: 0;
+    }
+
+    .navbar {
+        display: flex;
+        justify-content: flex-start;
+        gap: 10px;
+        padding: 10px;
+        background-color: #333;
+    }
+
+    .btn {
+        padding: 10px 15px;
+        background-color: #4CAF50;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 14px;
+    }
+
+    .btn:hover {
+        background-color: #45a049;
+    }
+
+    h1 {
+        margin: 20px;
+    }
+</style>
+
+<div class="navbar">
+    <a class="btn" href="{% url 'persons' %}">Persons</a>
+    <a class="btn" href="{% url 'residents' %}">Residents</a>
+    <a class="btn" href="{% url 'managers' %}">Managers</a>
+    <a class="btn" href="{% url 'buildings' %}">Buildings</a>
+    <a class="btn" href="{% url 'apartments' %}">Apartments</a>
+    <a class="btn" href="{% url 'billings' %}">Billings</a>
+    <a class="btn" href="{% url 'complaints' %}">Complaints</a>
+    <a class="btn" href="{% url 'pending_complaints' %}">Pending Complaints</a>
+    <a class="btn" href="{% url 'solved_complaints' %}">Solved Complaints</a>
+    <a class="btn" href="{% url 'notices' %}">Notices</a>
+    <a class="btn" href="{% url 'pending_bill' %}">PendingBill</a>
+    <a class="btn" href="{% url 'paid_bill' %}">PaidBill</a>
+    <a class="btn" href="{% url 'reports' %}">Report</a>
+</div>
+<html>
+<head>
+    <title>Manager Report</title>
+    <style>
+        body {
+            font-family: Arial;
+            margin: 40px;
+        }
+        h1 {
+            text-align: left;
+        }
+        .card {
+            border: 1px solid #aaa;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Manager 1 Overall Report</h1>
+
+<div class="card">
+    <h3>Billing Summary</h3>
+    <p>Total Bills: {{ total_bills }}</p>
+    <p>Total Amount: {{ total_amount }}</p>
+</div>
+
+<div class="card">
+    <h3>Paid Bills</h3>
+    <p>Count: {{ paid_count }}</p>
+    <p>Total Paid: {{ paid_amount }}</p>
+</div>
+
+<div class="card">
+    <h3>Pending Bills</h3>
+    <p>Count: {{ pending_count }}</p>
+    <p>Total Due: {{ pending_amount }}</p>
+</div>
+
+<div class="card">
+    <h3>Complaints</h3>
+    <p>Pending: {{ pending_complaints }}</p>
+    <p>Solved: {{ solved_complaints }}</p>
+</div>
+
+<div class="card">
+    <h3>Residents</h3>
+    <p>Total Residents Under Manager: {{ total_residents }}</p>
+</div>
+
+</body>
+</html>
