@@ -1,6 +1,63 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.db import connection
 from .models import *
+
+
+def login_view(request):
+    if request.method == 'POST':
+        role = request.POST.get('role')
+        phone = request.POST.get('phone_number')
+        password = request.POST.get('password')
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT person_id, name, password FROM core_person WHERE phone_number = %s",
+                [phone]
+            )
+            row = cursor.fetchone()
+
+        if not row:
+            return render(request, 'login.html', {'error': 'Phone number not found.'})
+
+        person_id, name, stored_password = row
+
+        if stored_password != password:
+            return render(request, 'login.html', {'error': 'Incorrect password.'})
+
+        if role == 'resident':
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT person_id FROM core_resident WHERE person_id = %s",
+                    [person_id]
+                )
+                if not cursor.fetchone():
+                    return render(request, 'login.html', {'error': 'This person is not a resident.'})
+            request.session['person_id'] = person_id
+            request.session['role'] = 'resident'
+            return redirect('resident_profile')
+
+        elif role == 'manager':
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT person_id FROM core_manager WHERE person_id = %s",
+                    [person_id]
+                )
+                if not cursor.fetchone():
+                    return render(request, 'login.html', {'error': 'This person is not a manager.'})
+            request.session['person_id'] = person_id
+            request.session['role'] = 'manager'
+            return redirect('manager_profile')
+
+        else:
+            return render(request, 'login.html', {'error': 'Please select a role.'})
+
+    return render(request, 'login.html')
+
+
+def logout_view(request):
+    request.session.flush()
+    return redirect('login')
+
 
 def home_view(request):
     return render(request, 'home.html')
