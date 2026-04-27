@@ -1,0 +1,94 @@
+{% extends 'resident_templates/resident_base.html' %}
+
+{% block title %}Profile{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-card {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        max-width: 600px;
+    }
+
+    .profile-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .profile-header img {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        margin-right: 20px;
+    }
+
+    .profile-header h3 {
+        margin: 0;
+    }
+
+    .info-row {
+        margin: 12px 0;
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 8px;
+    }
+
+    .label {
+        font-weight: bold;
+        color: #555;
+    }
+
+    .value {
+        color: #333;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<h2>Profile</h2>
+
+<div class="profile-card">
+
+    <div class="profile-header">
+        <img src="{{ profile_pic|default:'https://via.placeholder.com/80' }}">
+        <h3>{{ name }}</h3>
+    </div>
+
+    <div class="info-row">
+        <div class="label">Phone</div>
+        <div class="value">{{ phone }}</div>
+    </div>
+
+    <div class="info-row">
+        <div class="label">Email</div>
+        <div class="value">{{ email }}</div>
+    </div>
+
+    <div class="info-row">
+        <div class="label">NID</div>
+        <div class="value">{{ nid }}</div>
+    </div>
+
+    <div class="info-row">
+        <div class="label">Type</div>
+        <div class="value">{{ resident_type }}</div>
+    </div>
+
+    <div class="info-row">
+        <div class="label">Building</div>
+        <div class="value">{{ building_name }}</div>
+    </div>
+
+    <div class="info-row">
+        <div class="label">Apartment</div>
+        <div class="value">{{ apartment_name }}</div>
+    </div>
+
+</div>
+
+{% endblock %}

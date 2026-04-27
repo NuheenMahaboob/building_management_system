@@ -1,0 +1,49 @@
+{% extends 'resident_templates/resident_base.html' %}
+
+{% block title %}Notices{% endblock %}
+
+{% block extra_css %}
+<style>
+    .notice-card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 15px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .notice-title {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .notice-date {
+        font-size: 13px;
+        color: #777;
+        margin-bottom: 10px;
+    }
+
+    .notice-desc {
+        font-size: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<h2>Notices</h2>
+
+{% if notices %}
+    {% for n in notices %}
+        <div class="notice-card">
+            <div class="notice-title">{{ n.0 }}</div>
+            <div class="notice-date">{{ n.2 }}</div>
+            <div class="notice-desc">{{ n.1 }}</div>
+        </div>
+    {% endfor %}
+{% else %}
+    <p>No notices available.</p>
+{% endif %}
+
+{% endblock %}

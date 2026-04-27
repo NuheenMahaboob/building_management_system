@@ -1,0 +1,151 @@
+{% extends 'resident_templates/resident_base.html' %}
+
+{% block title %}Billings{% endblock %}
+
+{% block extra_css %}
+<style>
+.cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.card {
+    padding: 20px;
+    border-radius: 12px;
+    color: white;
+    cursor: pointer;
+}
+
+.card.pending { background-color: #ff7f50; }
+.card.paid { background-color: #28a745; }
+
+.value {
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.sub {
+    font-size: 14px;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background: white;
+    margin: 8% auto;
+    padding: 20px;
+    width: 60%;
+    border-radius: 10px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.close {
+    float: right;
+    cursor: pointer;
+    font-size: 20px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<h2>Billings</h2>
+
+<!-- Success / Error messages -->
+{% if messages %}
+    {% for message in messages %}
+        <div style="background:#28a745;color:white;padding:10px;margin-bottom:15px;border-radius:5px;">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="cards">
+
+    <!-- Pending Card -->
+    <div class="card pending" onclick="openPending()">
+        <h3>Pending Bills</h3>
+        <div class="value">{{ pending_count }}</div>
+        <div class="sub">Total: {{ pending_total }} BDT</div>
+    </div>
+
+    <!-- Paid Card -->
+    <div class="card paid" onclick="openPaid()">
+        <h3>Paid Bills</h3>
+        <div class="value">{{ paid_count }}</div>
+        <div class="sub">Total: {{ paid_total }} BDT</div>
+    </div>
+
+</div>
+
+<!-- Pending Modal -->
+<div id="pendingModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closePending()">&times;</span>
+        <h3>Pending Bills</h3>
+
+        {% for b in pending_bills %}
+            <div style="margin-bottom:10px;">
+                <b>{{ b.1 }}</b> — {{ b.2 }} BDT (Due: {{ b.3 }})
+
+                <button onclick="confirmPayment({{ b.0 }}, '{{ b.1 }}', {{ b.2 }})">
+                    Pay
+                </button>
+
+                <form id="pay-form-{{ b.0 }}" method="POST" action="{% url 'pay_bill' b.0 %}" style="display:none;">
+                    {% csrf_token %}
+                </form>
+            </div>
+        {% empty %}
+            <p>No pending bills</p>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Paid Modal -->
+<div id="paidModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closePaid()">&times;</span>
+        <h3>Paid Bills</h3>
+
+        {% for b in paid_bills %}
+            <p><b>{{ b.1 }}</b> — {{ b.2 }} BDT — {{ b.3 }}</p>
+        {% empty %}
+            <p>No paid bills</p>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+function openPending() {
+    document.getElementById('pendingModal').style.display = 'block';
+}
+function closePending() {
+    document.getElementById('pendingModal').style.display = 'none';
+}
+
+function openPaid() {
+    document.getElementById('paidModal').style.display = 'block';
+}
+function closePaid() {
+    document.getElementById('paidModal').style.display = 'none';
+}
+
+function confirmPayment(billId, billType, amount) {
+    let msg = "Pay " + billType + " bill of " + amount + " BDT?";
+    if (confirm(msg)) {
+        document.getElementById("pay-form-" + billId).submit();
+    }
+}
+</script>
+
+{% endblock %}

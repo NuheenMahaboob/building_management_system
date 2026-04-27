@@ -9,7 +9,8 @@ class Person(models.Model):
     password = models.CharField(max_length=255)
     nid = models.CharField(max_length=50, blank=True, default='')
     email = models.EmailField(blank=True, default='')
-    profile_pic_url = models.URLField(blank=True, null=True)
+    profile_pic = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
+    #profile_pic_url = models.URLField(blank=True, null=True)
     # profile_pic = models.ImageField(upload_to='profiles/', blank=True, null=True)
 
     # def set_password(self, raw_password):
