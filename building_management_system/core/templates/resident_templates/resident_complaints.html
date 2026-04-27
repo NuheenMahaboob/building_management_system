@@ -1,0 +1,183 @@
+{% extends 'resident_templates/resident_base.html' %}
+
+{% block title %}Complaints{% endblock %}
+
+{% block extra_css %}
+<style>
+
+/* ---------- FORM BOX ---------- */
+.box {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+input, textarea {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+button {
+    padding: 10px 18px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+/* ---------- CARDS ---------- */
+.cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+}
+
+.card {
+    padding: 25px;
+    border-radius: 15px;
+    color: white;
+    cursor: pointer;
+    height: 140px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.card.pending { background-color: #ff7f50; }
+.card.solved { background-color: #28a745; }
+
+.card h3 {
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.value {
+    font-size: 32px;
+    font-weight: bold;
+}
+
+/* ---------- MODAL ---------- */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background: white;
+    margin: 8% auto;
+    padding: 20px;
+    width: 60%;
+    border-radius: 10px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.close {
+    float: right;
+    cursor: pointer;
+    font-size: 20px;
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 768px) {
+    .cards {
+        grid-template-columns: 1fr;
+    }
+}
+
+</style>
+{% endblock %}
+
+{% block content %}
+
+<h2>Complaints</h2>
+
+<!-- 🔹 FORM -->
+<div class="box">
+    <h3>New Complaint</h3>
+    <form method="POST">
+        {% csrf_token %}
+        <input type="text" name="type" placeholder="Type (e.g. Water, Electricity)" required>
+        <textarea name="description" placeholder="Describe the issue" required></textarea>
+        <button type="submit">Submit</button>
+    </form>
+</div>
+
+<!-- 🔹 CARDS -->
+<div class="cards">
+
+    <div class="card pending" onclick="openPending()">
+        <h3>Pending Complaints</h3>
+        <div class="value">{{ pending|length }}</div>
+    </div>
+
+    <div class="card solved" onclick="openSolved()">
+        <h3>Solved Complaints</h3>
+        <div class="value">{{ solved|length }}</div>
+    </div>
+
+</div>
+
+<!-- 🔹 Pending Modal -->
+<div id="pendingModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closePending()">&times;</span>
+        <h3>Pending Complaints</h3>
+
+        {% for p in pending %}
+            <p><b>{{ p.0 }}</b> — {{ p.1 }}</p>
+        {% empty %}
+            <p>No pending complaints</p>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- 🔹 Solved Modal -->
+<div id="solvedModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeSolved()">&times;</span>
+        <h3>Solved Complaints</h3>
+
+        {% for s in solved %}
+            <p><b>{{ s.0 }}</b> — {{ s.1 }} (Solved: {{ s.2 }})</p>
+        {% empty %}
+            <p>No solved complaints</p>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- 🔹 JS -->
+<script>
+function openPending() {
+    document.getElementById('pendingModal').style.display = 'block';
+}
+function closePending() {
+    document.getElementById('pendingModal').style.display = 'none';
+}
+
+function openSolved() {
+    document.getElementById('solvedModal').style.display = 'block';
+}
+function closeSolved() {
+    document.getElementById('solvedModal').style.display = 'none';
+}
+</script>
+
+{% endblock %}

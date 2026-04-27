@@ -1,0 +1,82 @@
+{% extends 'resident_templates/resident_base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+    }
+
+    .card {
+        padding: 20px;
+        border-radius: 12px;
+        color: white;
+        height: 150px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .card h3 {
+        font-size: 14px;
+        font-weight: 500;
+        opacity: 0.85;
+        margin-bottom: 10px;
+    }
+
+    .value {
+        font-size: 32px;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .value.small {
+        font-size: 18px;
+    }
+
+    .sub {
+        font-size: 14px;
+        opacity: 0.9;
+    }
+
+    .card.bill { background-color: #ff7f50; }
+    .card.complaint { background-color: #20c997; }
+    .card.notice { background-color: #17a2b8; }
+
+    @media (max-width: 768px) {
+        .cards {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<h2>Dashboard</h2>
+
+<div class="cards">
+
+    <div class="card bill">
+        <h3>Unpaid Bills</h3>
+        <div class="value">{{ unpaid_bills }}</div>
+        <div class="sub">Total: {{ total_due }} BDT</div>
+    </div>
+
+    <div class="card complaint">
+        <h3>Active Complaints</h3>
+        <div class="value">{{ active_complaints }}</div>
+    </div>
+
+    <div class="card notice">
+        <h3>Latest Notice</h3>
+        <div class="value small">{{ latest_notice }}</div>
+    </div>
+
+</div>
+
+{% endblock %}
