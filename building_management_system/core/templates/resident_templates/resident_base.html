@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}{% endblock %}</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #eef1f5;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #2f3b52;
+            color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .profile {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .profile img {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+        }
+
+        .profile h3 {
+            margin: 10px 0 5px;
+        }
+
+        .profile p {
+            color: #ccc;
+            font-size: 14px;
+            margin: 3px 0;
+        }
+
+        .menu {
+            flex: 1;
+        }
+
+        .menu a {
+            display: block;
+            color: white;
+            text-decoration: none;
+            padding: 12px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+
+        .menu a:hover {
+            background-color: #44506a;
+        }
+
+        .logout a {
+            display: block;
+            text-decoration: none;
+            color: white;
+            padding: 12px;
+            border-radius: 5px;
+            background-color: #dc3545;
+            text-align: center;
+        }
+
+        .logout a:hover {
+            background-color: #c82333;
+        }
+
+        .main {
+            flex: 1;
+            padding: 30px;
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+
+        <div class="profile">
+            <img src="{{ profile_pic|default:'https://via.placeholder.com/90' }}">
+            <h3>Hello, {{ name }}</h3>
+            <p>Type: {{ resident_type }}</p>
+            <p>Building: {{ building_name }}</p>
+            <p>Apartment: {{ apartment_name }}</p>
+        </div>
+
+        <div class="menu">
+            <a href="{% url 'resident_dashboard' %}">Dashboard</a>
+            <a href="{% url 'resident_billings' %}">Billings</a>
+            <a href="{% url 'resident_notices' %}">Notices</a>
+            <a href="{% url 'resident_complaints' %}">Complaints</a>
+            <a href="{% url 'profile' %}">Profile</a>
+        </div>
+
+        <div class="logout">
+            <a href="{% url 'logout' %}">Logout</a>
+        </div>
+
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+        {% block content %}{% endblock %}
+    </div>
+
+</div>
+
+</body>
+</html>
