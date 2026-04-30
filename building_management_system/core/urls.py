@@ -30,4 +30,13 @@ urlpatterns = [
     path('resident_billings/', views.resident_billings, name='resident_billings'),
     path('pay/<int:bill_id>/', views.pay_bill, name='pay_bill'),
     path('resident_complaints/', views.resident_complaints, name='resident_complaints'),
+    # Manager views
+    path('manager-dashboard/', views.manager_dashboard, name='manager_dashboard'),
+    path('manager-profile/', views.manager_profile, name='manager_profile'),
+    path('manager-notices/', views.manager_notices, name='manager_notices'),
+    path('manager-billings/', views.manager_billings, name='manager_billings'),
+    path('manager-complaints/', views.manager_complaints, name='manager_complaints'),
+    path('solve-complaint/<int:complaint_id>/', views.solve_complaint, name='solve_complaint'),
+    path('manager-residents/', views.manager_residents, name='manager_residents'),
+
 ]

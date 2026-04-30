@@ -1,0 +1,110 @@
+{% extends 'manager_templates/manager_base.html' %}
+
+{% block title %}Manager Profile{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-card {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        max-width: 600px;
+        margin-bottom: 25px;
+    }
+
+    .profile-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .profile-header img {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        margin-right: 20px;
+    }
+
+    .profile-header h3 {
+        margin: 0;
+    }
+
+    .info-row {
+        margin: 12px 0;
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 8px;
+    }
+
+    .label {
+        font-weight: bold;
+        color: #555;
+    }
+
+    .value {
+        color: #333;
+    }
+
+    .building-card {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        border-left: 4px solid #6f42c1;
+    }
+
+    .building-card h4 {
+        margin: 0 0 5px;
+    }
+
+    .building-card p {
+        margin: 3px 0;
+        color: #555;
+        font-size: 14px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<h2>Profile</h2>
+
+<div class="profile-card">
+
+    <div class="profile-header">
+        <img src="{{ profile_pic|default:'https://via.placeholder.com/80' }}">
+        <h3>{{ name }}</h3>
+    </div>
+
+    <div class="info-row">
+        <div class="label">Phone</div>
+        <div class="value">{{ phone }}</div>
+    </div>
+
+    <div class="info-row">
+        <div class="label">Email</div>
+        <div class="value">{{ email }}</div>
+    </div>
+
+    <div class="info-row">
+        <div class="label">NID</div>
+        <div class="value">{{ nid }}</div>
+    </div>
+
+</div>
+
+<h3>Buildings Managed</h3>
+
+{% for b in buildings %}
+    <div class="building-card">
+        <h4>{{ b.0 }}</h4>
+        <p>Address: {{ b.1 }}</p>
+        <p>Total Apartments: {{ b.2 }}</p>
+    </div>
+{% empty %}
+    <p>No buildings assigned.</p>
+{% endfor %}
+
+{% endblock %}
