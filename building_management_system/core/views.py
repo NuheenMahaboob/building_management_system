@@ -428,6 +428,7 @@ def manager_dashboard(request):
         total_buildings = cursor.fetchone()[0]
 
         # Total residents in specific manager's buildings
+        #distinct bad
         cursor.execute("""
             SELECT COUNT(DISTINCT a.resident_id)
             FROM core_apartment a
@@ -519,8 +520,8 @@ def manager_profile(request):
 
 
 def manager_notices(request):
-    person_id = request.session.get('person_id')
-    role = request.session.get('role')
+    person_id = request.session.get('person_id') #session diye save kori
+    role = request.session.get('role') # kon manager kortese
 
     if not person_id or role != 'manager':
         return redirect('login')
