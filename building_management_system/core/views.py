@@ -409,7 +409,7 @@ def get_manager_sidebar(person_id):
 
 
 def manager_dashboard(request):
-    person_id = request.session.get('person_id')
+    person_id = request.session.get('person_id') #session hocche jei person ke call kora hocche take antese
     role = request.session.get('role')
 
     if not person_id or role != 'manager':
@@ -551,6 +551,7 @@ def manager_notices(request):
         buildings = cursor.fetchall()
 
         # Notices posted by this manager
+        #left join not neccessary
         cursor.execute("""
             SELECT n.title, n.description, n.date, b.name
             FROM core_notice n
@@ -608,6 +609,7 @@ def manager_billings(request):
 
             cursor.execute("SELECT LAST_INSERT_ID()")
             bill_id = cursor.fetchone()[0]
+            #eta manually korte hobe na admin table er pending e insert
 
             cursor.execute("""
                 INSERT INTO core_pendingbill (bill_id, due_date)
@@ -655,6 +657,7 @@ def manager_billings(request):
         paid_bills = cursor.fetchall()
 
         # Apartments for dropdown (from managed buildings, with a resident)
+        #apartment ui billing line  class box
         cursor.execute("""
             SELECT a.id, a.apartment_name, b.name
             FROM core_apartment a
@@ -688,7 +691,7 @@ def manager_complaints(request):
 
     with connection.cursor() as cursor:
 
-        # Pending complaints from residents in managed buildings
+        # Pending complaints from residents in managed buildings distinct karon multiple apart jodi thake
         cursor.execute("""
             SELECT DISTINCT c.complaint_id, c.type, c.description, pc.date_posted, p.name
             FROM core_pendingcomplaint pc
