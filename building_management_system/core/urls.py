@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from functools import partial
 
 urlpatterns = [
     # Common
@@ -21,7 +22,8 @@ urlpatterns = [
     path('pending_complaints/', views.PendingComplaint_view, name='pending_complaints'),
     path('solved_complaints/', views.SolvedComplaint_view, name='solved_complaints'),
     path('notices/', views.notices_view, name='notices'),
-    path('reports/', lambda request: views.manager_report_view(request, 1), name='reports'),
+    path('reports/', partial(views.manager_report_view, manager_id=1), name='reports'),
+
 
     # Resident views
     path('resident-dashboard/', views.resident_dashboard, name='resident_dashboard'),
@@ -38,5 +40,6 @@ urlpatterns = [
     path('manager-complaints/', views.manager_complaints, name='manager_complaints'),
     path('solve-complaint/<int:complaint_id>/', views.solve_complaint, name='solve_complaint'),
     path('manager-residents/', views.manager_residents, name='manager_residents'),
+    path('manager-report/', views.manager_monthly_report, name='manager_report'),
 
 ]

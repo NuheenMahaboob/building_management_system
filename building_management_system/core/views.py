@@ -790,6 +790,76 @@ def manager_residents(request):
 
     return render(request, 'manager_templates/manager_residents.html', context)
 
+def manager_monthly_report(request):
+    person_id = request.session.get('person_id')
+    role = request.session.get('role')
+
+    if not person_id or role != 'manager':
+        return redirect('login')
+
+    sidebar = get_manager_sidebar(person_id)
+
+    with connection.cursor() as cursor:
+
+        # Monthly paid bills grouped by type
+        cursor.execute("""
+            SELECT b.bill_type,
+                   COUNT(*) AS total_count,
+                   COALESCE(SUM(b.amount), 0) AS total_amount
+            FROM core_paidbill pb
+            JOIN core_billing b ON pb.bill_id = b.bill_id
+            WHERE b.manager_id = %s
+              AND MONTH(pb.date_paid) = MONTH(CURDATE())
+              AND YEAR(pb.date_paid) = YEAR(CURDATE())
+            GROUP BY b.bill_type
+        """, [person_id])
+        paid_by_type = cursor.fetchall()
+
+        # Monthly pending bills grouped by type
+        cursor.execute("""
+            SELECT b.bill_type,
+                   COUNT(*) AS total_count,
+                   COALESCE(SUM(b.amount), 0) AS total_amount
+            FROM core_pendingbill pb
+            JOIN core_billing b ON pb.bill_id = b.bill_id
+            WHERE b.manager_id = %s
+              AND MONTH(b.date_created) = MONTH(CURDATE())
+              AND YEAR(b.date_created) = YEAR(CURDATE())
+            GROUP BY b.bill_type
+        """, [person_id])
+        pending_by_type = cursor.fetchall()
+
+        # Monthly totals
+        cursor.execute("""
+            SELECT COALESCE(SUM(b.amount), 0)
+            FROM core_paidbill pb
+            JOIN core_billing b ON pb.bill_id = b.bill_id
+            WHERE b.manager_id = %s
+              AND MONTH(pb.date_paid) = MONTH(CURDATE())
+              AND YEAR(pb.date_paid) = YEAR(CURDATE())
+        """, [person_id])
+        total_paid = cursor.fetchone()[0]
+
+        cursor.execute("""
+            SELECT COALESCE(SUM(b.amount), 0)
+            FROM core_pendingbill pb
+            JOIN core_billing b ON pb.bill_id = b.bill_id
+            WHERE b.manager_id = %s
+              AND MONTH(b.date_created) = MONTH(CURDATE())
+              AND YEAR(b.date_created) = YEAR(CURDATE())
+        """, [person_id])
+        total_pending = cursor.fetchone()[0]
+
+    context = {
+        **sidebar,
+        'paid_by_type': paid_by_type,
+        'pending_by_type': pending_by_type,
+        'total_paid': total_paid,
+        'total_pending': total_pending,
+    }
+
+    return render(request, 'manager_templates/manager_report.html', context)
+
 
 def home_view(request):
     return render(request, 'home.html')
