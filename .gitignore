@@ -1,0 +1,7 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+
+# Large local files
+django tutorial.mp4

@@ -1,0 +1,166 @@
+{% extends 'manager_templates/manager_base.html' %}
+
+{% block title %}Complaints{% endblock %}
+
+{% block extra_css %}
+<style>
+    .cards {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 25px;
+        margin-bottom: 25px;
+    }
+
+    .card {
+        padding: 25px;
+        border-radius: 15px;
+        color: white;
+        cursor: pointer;
+        height: 140px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .card.pending { background-color: #ff7f50; }
+    .card.solved { background-color: #28a745; }
+
+    .card h3 {
+        font-size: 18px;
+        font-weight: 500;
+    }
+
+    .value {
+        font-size: 32px;
+        font-weight: bold;
+    }
+
+    /* Modal */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5);
+    }
+
+    .modal-content {
+        background: white;
+        margin: 8% auto;
+        padding: 20px;
+        width: 60%;
+        border-radius: 10px;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .close {
+        float: right;
+        cursor: pointer;
+        font-size: 20px;
+    }
+
+    .solve-btn {
+        padding: 6px 14px;
+        background: #28a745;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-left: 10px;
+    }
+
+    .solve-btn:hover {
+        background: #218838;
+    }
+
+    @media (max-width: 768px) {
+        .cards {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<h2>Complaints</h2>
+
+<!-- Messages -->
+{% if messages %}
+    {% for message in messages %}
+        <div style="background:#28a745;color:white;padding:10px;margin-bottom:15px;border-radius:5px;">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<!-- Cards -->
+<div class="cards">
+
+    <div class="card pending" onclick="openPending()">
+        <h3>Pending Complaints</h3>
+        <div class="value">{{ pending|length }}</div>
+    </div>
+
+    <div class="card solved" onclick="openSolved()">
+        <h3>Solved Complaints</h3>
+        <div class="value">{{ solved|length }}</div>
+    </div>
+
+</div>
+
+<!-- Pending Modal -->
+<div id="pendingModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closePending()">&times;</span>
+        <h3>Pending Complaints</h3>
+
+        {% for p in pending %}
+            <div style="margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #eee;">
+                <b>{{ p.1 }}</b> — {{ p.2 }}<br>
+                <small>Posted: {{ p.3 }} | By: {{ p.4 }}</small>
+
+                <form method="POST" action="{% url 'solve_complaint' p.0 %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="solve-btn">Solve</button>
+                </form>
+            </div>
+        {% empty %}
+            <p>No pending complaints</p>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Solved Modal -->
+<div id="solvedModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeSolved()">&times;</span>
+        <h3>Solved Complaints</h3>
+
+        {% for s in solved %}
+            <p><b>{{ s.0 }}</b> — {{ s.1 }} (Solved: {{ s.2 }}) | By: {{ s.3 }}</p>
+        {% empty %}
+            <p>No solved complaints</p>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+function openPending() {
+    document.getElementById('pendingModal').style.display = 'block';
+}
+function closePending() {
+    document.getElementById('pendingModal').style.display = 'none';
+}
+
+function openSolved() {
+    document.getElementById('solvedModal').style.display = 'block';
+}
+function closeSolved() {
+    document.getElementById('solvedModal').style.display = 'none';
+}
+</script>
+
+{% endblock %}

@@ -10,20 +10,11 @@ class Person(models.Model):
     nid = models.CharField(max_length=50, blank=True, default='')
     email = models.EmailField(blank=True, default='')
     profile_pic = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
-    #profile_pic_url = models.URLField(blank=True, null=True)
-    # profile_pic = models.ImageField(upload_to='profiles/', blank=True, null=True)
 
-    # def set_password(self, raw_password):
-    #     self.password = make_password(raw_password)
-
-    # def check_password(self, raw_password):
-    #     return check_password(raw_password, self.password)
 
     def __str__(self):
         return self.name
 
-    # class Meta:
-        # db_table = 'person'
 
 
 class Resident(models.Model):
@@ -37,8 +28,7 @@ class Resident(models.Model):
     def __str__(self):
         return self.person.name
 
-    # class Meta:
-    #     db_table = 'resident'
+   
 
 
 class Manager(models.Model):
@@ -47,8 +37,6 @@ class Manager(models.Model):
     def __str__(self):
         return self.person.name
 
-    # class Meta:
-         # db_table = 'manager'
 
 
 class Building(models.Model):
@@ -61,8 +49,6 @@ class Building(models.Model):
     def __str__(self):
         return self.name
 
-    # class Meta:
-    #     db_table = 'building'
 
 
 class Apartment(models.Model):
@@ -71,9 +57,7 @@ class Apartment(models.Model):
     apartment_name = models.CharField(max_length=255, blank=True, default='')
     resident = models.ForeignKey(Resident, on_delete=models.SET_NULL, null=True, blank=True, related_name='apartments')
 
-    # class Meta:
-    #     unique_together = ('building', 'apartment_no')
-    #     db_table = 'apartment'
+
 
     def __str__(self):
         return f"{self.building.name} - Apt {self.apartment_no}"
@@ -98,9 +82,6 @@ class Billing(models.Model):
     def __str__(self):
         return f"Bill #{self.bill_id} - {self.get_bill_type_display()}"
 
-    # class Meta:
-    #     db_table = 'billing'
-
 
 class PendingBill(models.Model):
     bill = models.OneToOneField(Billing, on_delete=models.CASCADE, primary_key=True, related_name='pending')
@@ -109,8 +90,6 @@ class PendingBill(models.Model):
     def __str__(self):
         return f"Pending: {self.bill}"
 
-    # class Meta:
-    #     db_table = 'pending_bill'
 
 
 class PaidBill(models.Model):
@@ -120,8 +99,6 @@ class PaidBill(models.Model):
     def __str__(self):
         return f"Paid: {self.bill}"
 
-    # class Meta:
-    #     db_table = 'paid_bill'
 
 
 class Complaint(models.Model):
@@ -133,8 +110,6 @@ class Complaint(models.Model):
     def __str__(self):
         return f"Complaint #{self.complaint_id} - {self.type}"
 
-    # class Meta:
-    #     db_table = 'complaint'
 
 
 class PendingComplaint(models.Model):
@@ -144,8 +119,6 @@ class PendingComplaint(models.Model):
     def __str__(self):
         return f"Pending: {self.complaint}"
 
-    # class Meta:
-    #     db_table = 'pending_complaint'
 
 
 class SolvedComplaint(models.Model):
@@ -156,8 +129,6 @@ class SolvedComplaint(models.Model):
     def __str__(self):
         return f"Solved: {self.complaint}"
 
-    # class Meta:
-    #     db_table = 'solved_complaint'
 
 
 class Notice(models.Model):
@@ -170,6 +141,3 @@ class Notice(models.Model):
 
     def __str__(self):
         return self.title
-
-    # class Meta:
-    #     db_table = 'notice'

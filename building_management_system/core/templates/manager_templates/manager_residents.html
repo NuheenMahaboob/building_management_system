@@ -1,0 +1,67 @@
+{% extends 'manager_templates/manager_base.html' %}
+
+{% block title %}Residents{% endblock %}
+
+{% block extra_css %}
+<style>
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    th, td {
+        padding: 14px 18px;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+    }
+
+    th {
+        background-color: #1b2a4a;
+        color: white;
+        font-weight: 500;
+    }
+
+    tr:hover {
+        background-color: #f5f5f5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<h2>Residents</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Email</th>
+            <th>Type</th>
+            <th>Apartment</th>
+            <th>Building</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in residents %}
+            <tr>
+                <td>{{ r.0 }}</td>
+                <td>{{ r.1 }}</td>
+                <td>{{ r.2 }}</td>
+                <td>{{ r.3 }}</td>
+                <td>{{ r.4 }}</td>
+                <td>{{ r.5 }}</td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="6">No residents found.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

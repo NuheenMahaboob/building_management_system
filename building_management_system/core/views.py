@@ -51,7 +51,7 @@ def login_view(request):
                     return render(request, 'login.html', {'error': 'This person is not a manager.'})
             request.session['person_id'] = person_id #ekhane person id store hochhe
             request.session['role'] = 'manager'
-            return redirect('manager_profile')
+            return redirect('manager_dashboard')
 
         else:
             return render(request, 'login.html', {'error': 'Please select a role.'})
@@ -370,6 +370,498 @@ def resident_complaints(request):
 
     return render(request, 'resident_templates/resident_complaints.html', context)
 
+#Manager er shob views
+def get_manager_sidebar(person_id):
+    with connection.cursor() as cursor:
+
+        # Person info
+        cursor.execute("""
+            SELECT name, profile_pic
+            FROM core_person
+            WHERE person_id = %s
+        """, [person_id])
+
+        person = cursor.fetchone()
+
+        if person:
+            name, profile_pic = person
+        else:
+            name, profile_pic = "You are not a manager", None
+
+        if profile_pic:
+            profile_pic = settings.MEDIA_URL + profile_pic
+
+        # Buildings managed
+        cursor.execute("""
+            SELECT b.name
+            FROM core_building b
+            WHERE b.manager_id = %s
+        """, [person_id])
+        buildings = cursor.fetchall()
+        building_names = [b[0] for b in buildings] if buildings else []
+        total_buildings = len(building_names)
+
+    return {
+        'name': name,
+        'profile_pic': profile_pic,
+        'building_names': building_names,
+        'total_buildings': total_buildings,
+    }
+
+def manager_dashboard(request):
+    person_id = request.session.get('person_id')
+    role = request.session.get('role')
+
+    if not person_id or role != 'manager':
+        return redirect('login')
+
+    sidebar = get_manager_sidebar(person_id)
+
+    with connection.cursor() as cursor:
+
+        # Total buildings
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM core_building
+            WHERE manager_id = %s
+        """, [person_id])
+        total_buildings = cursor.fetchone()[0]
+
+        # Total residents in specific manager's buildings
+        cursor.execute("""
+            SELECT COUNT(DISTINCT a.resident_id)
+            FROM core_apartment a
+            JOIN core_building b ON a.building_id = b.building_id
+            WHERE b.manager_id = %s AND a.resident_id IS NOT NULL
+        """, [person_id])
+        total_residents = cursor.fetchone()[0]
+
+        # Due bills er total
+        cursor.execute("""
+            SELECT COUNT(*), COALESCE(SUM(b.amount), 0)
+            FROM core_pendingbill pb
+            JOIN core_billing b ON pb.bill_id = b.bill_id
+            WHERE b.manager_id = %s
+        """, [person_id])
+        pending_bills, pending_amount = cursor.fetchone()
+
+        # Kotoguli complaint pending ache
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM core_pendingcomplaint pc
+            JOIN core_complaint c ON pc.complaint_id = c.complaint_id
+            JOIN core_apartment a ON c.resident_id = a.resident_id
+            JOIN core_building b ON a.building_id = b.building_id
+            WHERE b.manager_id = %s
+        """, [person_id])
+        pending_complaints = cursor.fetchone()[0]
+
+        # Recent notice
+        cursor.execute("""
+            SELECT n.title
+            FROM core_notice n
+            WHERE n.manager_id = %s
+            ORDER BY n.date DESC, n.notice_id DESC
+            LIMIT 1
+        """, [person_id])
+        row = cursor.fetchone()
+        latest_notice = row[0] if row else "No notices"
+
+    context = {
+        **sidebar,
+        'total_buildings': total_buildings,
+        'total_residents': total_residents,
+        'pending_bills': pending_bills,
+        'pending_amount': pending_amount,
+        'pending_complaints': pending_complaints,
+        'latest_notice': latest_notice,
+    }
+
+    return render(request, 'manager_templates/manager_dashboard.html', context)
+
+
+def manager_profile(request):
+    person_id = request.session.get('person_id')
+    role = request.session.get('role')
+
+    if not person_id or role != 'manager':
+        return redirect('login')
+
+    sidebar = get_manager_sidebar(person_id)
+
+    with connection.cursor() as cursor:
+
+        cursor.execute("""
+            SELECT phone_number, email, nid
+            FROM core_person
+            WHERE person_id = %s
+        """, [person_id])
+
+        phone, email, nid = cursor.fetchone()
+
+        # Buildings managed with details
+        cursor.execute("""
+            SELECT b.name, b.address, b.total_apartment
+            FROM core_building b
+            WHERE b.manager_id = %s
+        """, [person_id])
+        buildings = cursor.fetchall()
+
+    context = {
+        **sidebar,
+        'phone': phone,
+        'email': email,
+        'nid': nid,
+        'buildings': buildings,
+    }
+
+    return render(request, 'manager_templates/manager_profile.html', context)
+
+
+def manager_notices(request):
+    person_id = request.session.get('person_id')
+    role = request.session.get('role')
+
+    if not person_id or role != 'manager':
+        return redirect('login')
+
+    sidebar = get_manager_sidebar(person_id)
+
+    with connection.cursor() as cursor:
+
+        if request.method == 'POST':
+            title = request.POST.get('title')
+            description = request.POST.get('description')
+            building_id = request.POST.get('building_id')
+            #create kortese complaint
+
+            cursor.execute("""
+                INSERT INTO core_notice (title, description, date, building_id, manager_id)
+                VALUES (%s, %s, %s, %s, %s)
+            """, [title, description, now().date(), building_id, person_id])
+
+            return redirect('manager_notices')
+
+        # Kon building select hocchee
+        cursor.execute("""
+            SELECT building_id, name
+            FROM core_building
+            WHERE manager_id = %s
+        """, [person_id])
+        buildings = cursor.fetchall()
+
+        # Notices posted by this manager
+        cursor.execute("""
+            SELECT n.title, n.description, n.date, b.name
+            FROM core_notice n
+            LEFT JOIN core_building b ON n.building_id = b.building_id
+            WHERE n.manager_id = %s
+            ORDER BY n.date DESC, n.notice_id DESC
+        """, [person_id])
+        notices = cursor.fetchall()
+
+    context = {
+        **sidebar,
+        'buildings': buildings,
+        'notices': notices,
+    }
+
+    return render(request, 'manager_templates/manager_notices.html', context)
+
+
+def manager_billings(request):
+    person_id = request.session.get('person_id')
+    role = request.session.get('role')
+
+    if not person_id or role != 'manager':
+        return redirect('login')
+
+    sidebar = get_manager_sidebar(person_id)
+
+    with connection.cursor() as cursor:
+
+        if request.method == 'POST':
+            bill_type = request.POST.get('bill_type')
+            amount = request.POST.get('amount')
+            apartment_id = request.POST.get('apartment_id')
+            due_date = request.POST.get('due_date')
+
+            # Get resident_id for this apartment
+            cursor.execute("""
+                SELECT a.resident_id
+                FROM core_apartment a
+                JOIN core_building b ON a.building_id = b.building_id
+                WHERE a.id = %s AND b.manager_id = %s
+            """, [apartment_id, person_id])
+            row = cursor.fetchone()
+
+            if not row or not row[0]:
+                messages.error(request, "No such resident.")
+                return redirect('manager_billings')
+
+            resident_id = row[0]
+
+            cursor.execute("""
+                INSERT INTO core_billing (bill_type, amount, date_created, apartment_id, manager_id, resident_id)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, [bill_type, amount, now().date(), apartment_id, person_id, resident_id])
+
+            cursor.execute("SELECT LAST_INSERT_ID()")
+            bill_id = cursor.fetchone()[0]
+
+            cursor.execute("""
+                INSERT INTO core_pendingbill (bill_id, due_date)
+                VALUES (%s, %s)
+            """, [bill_id, due_date])
+
+            messages.success(request, "Bill created successfully!")
+            return redirect('manager_billings')
+
+        # Summary counts
+        cursor.execute("""
+            SELECT COUNT(*), COALESCE(SUM(b.amount), 0)
+            FROM core_pendingbill pb
+            JOIN core_billing b ON pb.bill_id = b.bill_id
+            WHERE b.manager_id = %s
+        """, [person_id])
+        pending_count, pending_total = cursor.fetchone()
+
+        cursor.execute("""
+            SELECT COUNT(*), COALESCE(SUM(b.amount), 0)
+            FROM core_paidbill pb
+            JOIN core_billing b ON pb.bill_id = b.bill_id
+            WHERE b.manager_id = %s
+        """, [person_id])
+        paid_count, paid_total = cursor.fetchone()
+
+        # Pending bills list
+        cursor.execute("""
+            SELECT b.bill_id, b.bill_type, b.amount, pb.due_date, p.name
+            FROM core_pendingbill pb
+            JOIN core_billing b ON pb.bill_id = b.bill_id
+            JOIN core_person p ON b.resident_id = p.person_id
+            WHERE b.manager_id = %s
+        """, [person_id])
+        pending_bills = cursor.fetchall()
+
+        # Paid bills list
+        cursor.execute("""
+            SELECT b.bill_id, b.bill_type, b.amount, pb.date_paid, p.name
+            FROM core_paidbill pb
+            JOIN core_billing b ON pb.bill_id = b.bill_id
+            JOIN core_person p ON b.resident_id = p.person_id
+            WHERE b.manager_id = %s
+        """, [person_id])
+        paid_bills = cursor.fetchall()
+
+        # Apartments for dropdown (from managed buildings, with a resident)
+        cursor.execute("""
+            SELECT a.id, a.apartment_name, b.name
+            FROM core_apartment a
+            JOIN core_building b ON a.building_id = b.building_id
+            WHERE b.manager_id = %s AND a.resident_id IS NOT NULL
+        """, [person_id])
+        apartments = cursor.fetchall()
+
+    context = {
+        **sidebar,
+        'pending_count': pending_count,
+        'pending_total': pending_total,
+        'paid_count': paid_count,
+        'paid_total': paid_total,
+        'pending_bills': pending_bills,
+        'paid_bills': paid_bills,
+        'apartments': apartments,
+    }
+
+    return render(request, 'manager_templates/manager_billings.html', context)
+
+
+def manager_complaints(request):
+    person_id = request.session.get('person_id')
+    role = request.session.get('role')
+
+    if not person_id or role != 'manager':
+        return redirect('login')
+
+    sidebar = get_manager_sidebar(person_id)
+
+    with connection.cursor() as cursor:
+
+        # Pending complaints from residents in managed buildings
+        cursor.execute("""
+            SELECT DISTINCT c.complaint_id, c.type, c.description, pc.date_posted, p.name
+            FROM core_pendingcomplaint pc
+            JOIN core_complaint c ON pc.complaint_id = c.complaint_id
+            JOIN core_person p ON c.resident_id = p.person_id
+            JOIN core_apartment a ON c.resident_id = a.resident_id
+            JOIN core_building b ON a.building_id = b.building_id
+            WHERE b.manager_id = %s
+        """, [person_id])
+        pending = cursor.fetchall()
+
+        # Solved complaints by this manager
+        cursor.execute("""
+            SELECT c.type, c.description, sc.date_solved, p.name
+            FROM core_solvedcomplaint sc
+            JOIN core_complaint c ON sc.complaint_id = c.complaint_id
+            JOIN core_person p ON c.resident_id = p.person_id
+            WHERE sc.manager_id = %s
+        """, [person_id])
+        solved = cursor.fetchall()
+
+    context = {
+        **sidebar,
+        'pending': pending,
+        'solved': solved,
+    }
+
+    return render(request, 'manager_templates/manager_complaints.html', context)
+
+
+def solve_complaint(request, complaint_id):
+    person_id = request.session.get('person_id')
+    role = request.session.get('role')
+
+    if not person_id or role != 'manager':
+        return redirect('login')
+
+    if request.method == 'POST':
+        with connection.cursor() as cursor:
+
+            # Verify complaint is pending and belongs to a resident in manager's buildings
+            cursor.execute("""
+                SELECT pc.complaint_id
+                FROM core_pendingcomplaint pc
+                JOIN core_complaint c ON pc.complaint_id = c.complaint_id
+                JOIN core_apartment a ON c.resident_id = a.resident_id
+                JOIN core_building b ON a.building_id = b.building_id
+                WHERE pc.complaint_id = %s AND b.manager_id = %s
+            """, [complaint_id, person_id])
+
+            if not cursor.fetchone():
+                messages.error(request, "Invalid complaint.")
+                return redirect('manager_complaints')
+
+            # Delete from pending
+            cursor.execute("""
+                DELETE FROM core_pendingcomplaint
+                WHERE complaint_id = %s
+            """, [complaint_id])
+
+            # Insert into solved
+            cursor.execute("""
+                INSERT INTO core_solvedcomplaint (complaint_id, date_solved, manager_id)
+                VALUES (%s, %s, %s)
+            """, [complaint_id, now().date(), person_id])
+
+        messages.success(request, "Complaint resolved!")
+
+    return redirect('manager_complaints')
+
+
+def manager_residents(request):
+    person_id = request.session.get('person_id')
+    role = request.session.get('role')
+
+    if not person_id or role != 'manager':
+        return redirect('login')
+
+    sidebar = get_manager_sidebar(person_id)
+
+    with connection.cursor() as cursor:
+
+        cursor.execute("""
+            SELECT p.name, p.phone_number, p.email, r.resident_type,
+                   a.apartment_name, b.name
+            FROM core_apartment a
+            JOIN core_building b ON a.building_id = b.building_id
+            JOIN core_resident r ON a.resident_id = r.person_id
+            JOIN core_person p ON r.person_id = p.person_id
+            WHERE b.manager_id = %s
+            ORDER BY b.name, a.apartment_name
+        """, [person_id])
+        residents = cursor.fetchall()
+
+    context = {
+        **sidebar,
+        'residents': residents,
+    }
+
+    return render(request, 'manager_templates/manager_residents.html', context)
+
+def manager_monthly_report(request):
+    person_id = request.session.get('person_id')
+    role = request.session.get('role')
+
+    if not person_id or role != 'manager':
+        return redirect('login')
+
+    sidebar = get_manager_sidebar(person_id)
+
+    with connection.cursor() as cursor:
+
+        # Monthly paid bills grouped by type
+        cursor.execute("""
+            SELECT b.bill_type,
+                   COUNT(*) AS total_count,
+                   COALESCE(SUM(b.amount), 0) AS total_amount
+            FROM core_paidbill pb
+            JOIN core_billing b ON pb.bill_id = b.bill_id
+            WHERE b.manager_id = %s
+              AND MONTH(pb.date_paid) = MONTH(CURDATE())
+              AND YEAR(pb.date_paid) = YEAR(CURDATE())
+            GROUP BY b.bill_type
+        """, [person_id])
+        paid_by_type = cursor.fetchall()
+
+        # Monthly pending bills grouped by type
+        cursor.execute("""
+            SELECT b.bill_type,
+                   COUNT(*) AS total_count,
+                   COALESCE(SUM(b.amount), 0) AS total_amount
+            FROM core_pendingbill pb
+            JOIN core_billing b ON pb.bill_id = b.bill_id
+            WHERE b.manager_id = %s
+              AND MONTH(b.date_created) = MONTH(CURDATE())
+              AND YEAR(b.date_created) = YEAR(CURDATE())
+            GROUP BY b.bill_type
+        """, [person_id])
+        pending_by_type = cursor.fetchall()
+
+        # Monthly totals
+        cursor.execute("""
+            SELECT COALESCE(SUM(b.amount), 0)
+            FROM core_paidbill pb
+            JOIN core_billing b ON pb.bill_id = b.bill_id
+            WHERE b.manager_id = %s
+              AND MONTH(pb.date_paid) = MONTH(CURDATE())
+              AND YEAR(pb.date_paid) = YEAR(CURDATE())
+        """, [person_id])
+        total_paid = cursor.fetchone()[0]
+
+        cursor.execute("""
+            SELECT COALESCE(SUM(b.amount), 0)
+            FROM core_pendingbill pb
+            JOIN core_billing b ON pb.bill_id = b.bill_id
+            WHERE b.manager_id = %s
+              AND MONTH(b.date_created) = MONTH(CURDATE())
+              AND YEAR(b.date_created) = YEAR(CURDATE())
+        """, [person_id])
+        total_pending = cursor.fetchone()[0]
+
+    context = {
+        **sidebar,
+        'paid_by_type': paid_by_type,
+        'pending_by_type': pending_by_type,
+        'total_paid': total_paid,
+        'total_pending': total_pending,
+    }
+
+    return render(request, 'manager_templates/manager_report.html', context)
+
+
+#Testing er baki files
 def home_view(request):
     return render(request, 'home.html')
 
